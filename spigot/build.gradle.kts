@@ -6,7 +6,7 @@ indra {
     javaVersions {
         // For Folia
         target(8)
-        minimumToolchain(17)
+        minimumToolchain(21)
     }
 }
 
@@ -21,7 +21,7 @@ dependencies {
 
     compileOnlyApi("dev.folia", "folia-api", Versions.spigotVersion) {
         attributes {
-            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17)
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
         }
     }
 }
