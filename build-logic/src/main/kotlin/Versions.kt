@@ -31,7 +31,7 @@ object Versions {
     const val spigotVersion = "1.21.4-R0.1-SNAPSHOT"
     const val fastutilVersion = "8.5.3"
     const val guiceVersion = "6.0.0"
-    const val nettyVersion = "4.2.0.Final"
+    const val nettyVersion = "4.1.121.Final"
     const val snakeyamlVersion = "1.28"
     const val cloudVersion = "2.0.0-SNAPSHOT" // for cloud-minecraft
     const val cloudCore = "2.0.0-rc.1"

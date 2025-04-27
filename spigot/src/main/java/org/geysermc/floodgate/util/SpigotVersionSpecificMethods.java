@@ -71,10 +71,16 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void hideAndShowPlayer(Player on, Player target) {
-        // In Folia we don't have to schedule this as there is no concept of a single main thread.
+        // In Folia, we don't have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
         if (ClassNames.IS_FOLIA) {
-            on.getScheduler().execute(plugin, () -> hideAndShowPlayer0(on, target), null, 0);
+            on.getScheduler().execute(plugin, () -> {
+                if (on.equals(target)) {
+                    hideAndShowPlayer0(on, target);
+                } else {
+                    target.getScheduler().execute(plugin, () -> hideAndShowPlayer0(on, target), null, 0);
+                }
+            }, null, 0);
             return;
         }
         hideAndShowPlayer0(on, target);
