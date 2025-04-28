@@ -95,37 +95,43 @@ public class GlobalPlayerLinking extends CommonPlayerLink {
 
     @NonNull
     private CompletableFuture<LinkedPlayer> getLinkedPlayer0(@NonNull UUID bedrockId) {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    DefaultHttpResponse response =
-                            httpClient.get(GET_BEDROCK_LINK + bedrockId.getLeastSignificantBits());
+        CompletableFuture<LinkedPlayer> future = new CompletableFuture<>();
+        try {
+            DefaultHttpResponse response =
+                    httpClient.get(GET_BEDROCK_LINK + bedrockId.getLeastSignificantBits());
 
-                    // either the global api is down or it failed to return link
-                    if (!response.isCodeOk()) {
-                        if (response.getResponse() != null) {
-                            getLogger().error(
-                                    "Failed to request link for {}: {}",
-                                    bedrockId.getLeastSignificantBits(),
-                                    response.getResponse().get("message").getAsString()
-                            );
-                        }
-                        return null;
-                    }
+            // either the global api is down or it failed to return link
+            if (!response.isCodeOk()) {
+                if (response.getResponse() != null) {
+                    getLogger().error(
+                            "Failed to request link for {}: {}",
+                            bedrockId.getLeastSignificantBits(),
+                            response.getResponse().get("message").getAsString()
+                    );
+                }
+                future.complete(null);
+                return future;
+            }
 
-                    JsonObject data = response.getResponse();
+            JsonObject data = response.getResponse();
 
-                    JsonElement javaName = data.get("java_name");
-                    // javaName will be null when the player isn't linked
-                    if (javaName == null) {
-                        return null;
-                    }
+            JsonElement javaName = data.get("java_name");
+            // javaName will be null when the player isn't linked
+            if (javaName == null) {
+                future.complete(null);
+                return future;
+            }
 
-                    return LinkedPlayer.of(
-                            javaName.getAsString(),
-                            UUID.fromString(data.get("java_id").getAsString()),
-                            Utils.getJavaUuid(data.get("bedrock_id").getAsLong()));
-                },
-                getExecutorService());
+            future.complete(LinkedPlayer.of(
+                javaName.getAsString(),
+                UUID.fromString(data.get("java_id").getAsString()),
+                Utils.getJavaUuid(data.get("bedrock_id").getAsLong())
+            ));
+        } catch (Exception e) {
+            future.complete(null);
+        }
+
+        return future;
     }
 
     @Override
@@ -159,7 +165,7 @@ public class GlobalPlayerLinking extends CommonPlayerLink {
                     }
 
                     // no link if data is empty, otherwise the player is linked
-                    return response.getResponse().entrySet().size() != 0;
+                    return !response.getResponse().entrySet().isEmpty();
                 },
                 getExecutorService());
     }
