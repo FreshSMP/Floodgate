@@ -117,8 +117,8 @@ public class GlobalPlayerLinking extends CommonPlayerLink {
                 }
 
                 JsonObject data = response.getResponse();
-                // javaName will be null when the player isn't linked
                 JsonElement javaName = data.get("java_name");
+                // javaName will be null when the player isn't linked
                 if (javaName == null) {
                     return null;
                 }
