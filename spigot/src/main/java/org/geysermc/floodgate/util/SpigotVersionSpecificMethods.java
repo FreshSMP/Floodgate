@@ -128,7 +128,7 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void maybeSchedule(Runnable runnable) {
-        // In Folia we don't have to schedule this as there is no concept of a single main thread.
+        // In Folia, we don't have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
         if (ClassNames.IS_FOLIA) {
             runnable.run();

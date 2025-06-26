@@ -32,12 +32,15 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.floodgate.api.SimpleFloodgateApi;
 import org.geysermc.floodgate.api.logger.FloodgateLogger;
 import org.geysermc.floodgate.api.player.FloodgatePlayer;
+import org.geysermc.floodgate.util.ClassNames;
 import org.geysermc.floodgate.util.LanguageManager;
 
 public final class SpigotListener implements Listener {
+    @Inject private JavaPlugin plugin;
     @Inject private SimpleFloodgateApi api;
     @Inject private LanguageManager languageManager;
     @Inject private FloodgateLogger logger;
@@ -65,6 +68,11 @@ public final class SpigotListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        api.playerRemoved(event.getPlayer().getUniqueId());
+        if (ClassNames.IS_FOLIA) {
+            event.getPlayer().getScheduler().execute(plugin, () ->
+                api.playerRemoved(event.getPlayer().getUniqueId()), null, 1);
+        } else {
+            api.playerRemoved(event.getPlayer().getUniqueId());
+        }
     }
 }
