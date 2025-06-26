@@ -76,11 +76,11 @@ public final class SpigotVersionSpecificMethods {
         if (ClassNames.IS_FOLIA) {
             on.getScheduler().execute(plugin, () -> {
                 if (on.equals(target)) {
-                    hideAndShowPlayer0(on, target);
+                    target.getScheduler().execute(plugin, () -> hideAndShowPlayer0(on, target), null, 1);
                 } else {
-                    target.getScheduler().execute(plugin, () -> hideAndShowPlayer0(on, target), null, 0);
+                    hideAndShowPlayer0(on, target);
                 }
-            }, null, 0);
+            }, null, 1);
             return;
         }
         hideAndShowPlayer0(on, target);

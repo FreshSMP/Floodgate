@@ -35,10 +35,7 @@ public final class AddonManagerAddon implements InjectorAddon {
 
     @Override
     public void onInject(Channel channel, boolean toServer) {
-        channel.closeFuture().addListener(listener -> {
-            injector.channelClosedCall(channel);
-            injector.removeInjectedClient(channel);
-        });
+        injector.addInjectedClient(channel);
     }
 
     @Override

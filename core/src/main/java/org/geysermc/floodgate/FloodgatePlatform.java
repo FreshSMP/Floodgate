@@ -40,6 +40,7 @@ import org.geysermc.floodgate.config.FloodgateConfig;
 import org.geysermc.floodgate.event.EventBus;
 import org.geysermc.floodgate.event.lifecycle.PostEnableEvent;
 import org.geysermc.floodgate.event.lifecycle.ShutdownEvent;
+import org.geysermc.floodgate.inject.CommonPlatformInjector;
 import org.geysermc.floodgate.module.PostInitializeModule;
 
 public class FloodgatePlatform {
@@ -83,6 +84,9 @@ public class FloodgatePlatform {
 
         if (injector != null && injector.canRemoveInjection()) {
             try {
+                if (injector instanceof CommonPlatformInjector) {
+                    ((CommonPlatformInjector) injector).forceRemoveAllClients();
+                }
                 injector.removeInjection();
             } catch (Exception exception) {
                 throw new RuntimeException("Failed to remove the injection!", exception);

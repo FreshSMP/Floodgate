@@ -40,12 +40,25 @@ public abstract class CommonPlatformInjector implements PlatformInjector {
 
     private final Map<Class<?>, InjectorAddon> addons = new HashMap<>();
 
-    protected boolean addInjectedClient(Channel channel) {
+    public boolean addInjectedClient(Channel channel) {
         return injectedClients.add(channel);
     }
 
     public boolean removeInjectedClient(Channel channel) {
         return injectedClients.remove(channel);
+    }
+
+    public void forceRemoveAllClients() {
+        Channel[] snapshot = injectedClients.toArray(new Channel[0]);
+
+        for (Channel channel : snapshot) {
+            try {
+                removeAddonsCall(channel);
+                removeInjectedClient(channel);
+            } catch (Exception ignored) {
+                // Cleanup
+            }
+        }
     }
 
     public Set<Channel> injectedClients() {
