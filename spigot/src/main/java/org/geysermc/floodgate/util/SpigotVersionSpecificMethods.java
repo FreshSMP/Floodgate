@@ -112,13 +112,22 @@ public final class SpigotVersionSpecificMethods {
 
     @SuppressWarnings("deprecation")
     private void hideAndShowPlayer0(Player source, Player target) {
-        if (NEW_VISIBILITY) {
-            source.hidePlayer(plugin, target);
-            source.showPlayer(plugin, target);
-            return;
+        try {
+            if (!source.isOnline() || !target.isOnline()) return;
+
+            if (NEW_VISIBILITY) {
+                source.hidePlayer(plugin, target);
+                source.showPlayer(plugin, target);
+            } else {
+                source.hidePlayer(target);
+                source.showPlayer(target);
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            plugin.getLogger().warning("[Floodgate] Prevented crash in showPlayer/hidePlayer: " + ex.getMessage());
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[Floodgate] Unexpected exception in showPlayer/hidePlayer:");
+            t.printStackTrace();
         }
-        source.hidePlayer(target);
-        source.showPlayer(target);
     }
 
     public void maybeSchedule(Runnable runnable) {
