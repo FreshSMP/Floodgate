@@ -74,10 +74,14 @@ public final class SpigotVersionSpecificMethods {
         // In Folia, we don't have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
         if (ClassNames.IS_FOLIA) {
-            on.getScheduler().run(plugin, task -> hideAndShowPlayer0(on, target), null);
+            on.getScheduler().run(plugin, task -> {
+                hide(on, target);
+                on.getScheduler().runDelayed(plugin, scheduledTask -> show(on, target), null, 1L);
+            }, null);
             return;
         }
-        hideAndShowPlayer0(on, target);
+        hide(on, target);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> show(on, target), 1L);
     }
 
     public SkinApplyEvent.SkinData currentSkin(PropertyMap properties) {
@@ -111,22 +115,24 @@ public final class SpigotVersionSpecificMethods {
     }
 
     @SuppressWarnings("deprecation")
-    private void hideAndShowPlayer0(Player source, Player target) {
-        try {
-            if (!source.isOnline() || !target.isOnline()) return;
+    private void hide(Player source, Player target) {
+        if (!source.isOnline() || !target.isOnline()) return;
 
-            if (NEW_VISIBILITY) {
-                source.hidePlayer(plugin, target);
-                source.showPlayer(plugin, target);
-            } else {
-                source.hidePlayer(target);
-                source.showPlayer(target);
-            }
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            plugin.getLogger().warning("[Floodgate] Prevented crash in showPlayer/hidePlayer: " + ex.getMessage());
-        } catch (Throwable t) {
-            plugin.getLogger().warning("[Floodgate] Unexpected exception in showPlayer/hidePlayer:");
-            t.printStackTrace();
+        if (NEW_VISIBILITY) {
+            source.hidePlayer(plugin, target);
+        } else {
+            source.hidePlayer(target);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void show(Player source, Player target) {
+        if (!source.isOnline() || !target.isOnline()) return;
+
+        if (NEW_VISIBILITY) {
+            source.showPlayer(plugin, target);
+        } else {
+            source.showPlayer(target);
         }
     }
 
