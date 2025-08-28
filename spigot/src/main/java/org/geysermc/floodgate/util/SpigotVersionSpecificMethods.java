@@ -28,6 +28,8 @@ package org.geysermc.floodgate.util;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -42,6 +44,11 @@ public final class SpigotVersionSpecificMethods {
 
     private static final Method NEW_PROPERTY_VALUE;
     private static final Method NEW_PROPERTY_SIGNATURE;
+
+    private static final ConcurrentHashMap<String, Long> DEBOUNCE = new ConcurrentHashMap<>();
+    private static final long DEBOUNCE_WINDOW_MS = 400L; // ~8 ticks
+    private static final long FOLIA_TARGET_DELAY_TICKS = 2L;
+    private static final long FOLIA_SOURCE_DELAY_TICKS = 1L;
 
     static {
         GET_SPIGOT = ReflectionUtils.getMethod(Player.class, "spigot");
@@ -73,15 +80,38 @@ public final class SpigotVersionSpecificMethods {
     public void hideAndShowPlayer(Player on, Player target) {
         // In Folia, we don't have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
+        if (!safePlayers(on, target)) return;
+        if (on == target) return;
+
+        if (shouldDebounce(on, target)) return;
+        final boolean alreadyHidden = !on.canSee(target);
+
         if (ClassNames.IS_FOLIA) {
             on.getScheduler().run(plugin, task -> {
-                hide(on, target);
-                on.getScheduler().runDelayed(plugin, scheduledTask -> show(on, target), null, 1L);
+                if (!safePlayers(on, target)) return;
+                if (!alreadyHidden) hide(on, target);
+
+                target.getScheduler().runDelayed(plugin, task2 -> {
+                    if (!safePlayers(on, target)) return;
+                    if (!sameWorld(on, target)) return;
+
+                    on.getScheduler().runDelayed(plugin, task3 -> {
+                        if (!safePlayers(on, target)) return;
+                        if (!sameWorld(on, target)) return;
+                        if (!on.canSee(target)) show(on, target);
+                    }, null, FOLIA_SOURCE_DELAY_TICKS);
+
+                }, null, FOLIA_TARGET_DELAY_TICKS);
             }, null);
             return;
         }
-        hide(on, target);
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> show(on, target), 1L);
+
+        if (!alreadyHidden) hide(on, target);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!safePlayers(on, target)) return;
+            if (!sameWorld(on, target)) return;
+            if (!on.canSee(target)) show(on, target);
+        }, 2L);
     }
 
     public SkinApplyEvent.SkinData currentSkin(PropertyMap properties) {
@@ -114,6 +144,34 @@ public final class SpigotVersionSpecificMethods {
         plugin.getServer().getScheduler().runTaskLater(plugin, runnable, delay);
     }
 
+    public void maybeSchedule(Runnable runnable) {
+        if (ClassNames.IS_FOLIA) {
+            runnable.run();
+            return;
+        }
+        plugin.getServer().getScheduler().runTask(plugin, runnable);
+    }
+
+    private static boolean safePlayers(Player a, Player b) {
+        return a != null && b != null && a.isOnline() && b.isOnline();
+    }
+
+    private static boolean sameWorld(Player a, Player b) {
+        return Objects.equals(a.getWorld(), b.getWorld());
+    }
+
+    private static String pairKey(Player viewer, Player target) {
+        return viewer.getUniqueId() + "->" + target.getUniqueId();
+    }
+
+    private static boolean shouldDebounce(Player viewer, Player target) {
+        final long nowMs = System.currentTimeMillis();
+        final String key = pairKey(viewer, target);
+
+        Long prev = DEBOUNCE.put(key, nowMs);
+        return prev != null && (nowMs - prev) < DEBOUNCE_WINDOW_MS;
+    }
+
     @SuppressWarnings("deprecation")
     private void hide(Player source, Player target) {
         if (!source.isOnline() || !target.isOnline()) return;
@@ -134,15 +192,5 @@ public final class SpigotVersionSpecificMethods {
         } else {
             source.showPlayer(target);
         }
-    }
-
-    public void maybeSchedule(Runnable runnable) {
-        // In Folia, we don't have to schedule this as there is no concept of a single main thread.
-        // Instead, we have to schedule the task per player.
-        if (ClassNames.IS_FOLIA) {
-            runnable.run();
-            return;
-        }
-        plugin.getServer().getScheduler().runTask(plugin, runnable);
     }
 }
