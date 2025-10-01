@@ -98,9 +98,8 @@ public final class SpigotVersionSpecificMethods {
                     on.getScheduler().runDelayed(plugin, task3 -> {
                         if (!safePlayers(on, target)) return;
                         if (!sameWorld(on, target)) return;
-                        if (!on.canSee(target)) show(on, target);
+                        show(on, target);
                     }, null, FOLIA_SOURCE_DELAY_TICKS);
-
                 }, null, FOLIA_TARGET_DELAY_TICKS);
             }, null);
             return;
@@ -110,7 +109,7 @@ public final class SpigotVersionSpecificMethods {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (!safePlayers(on, target)) return;
             if (!sameWorld(on, target)) return;
-            if (!on.canSee(target)) show(on, target);
+            show(on, target);
         }, 2L);
     }
 
@@ -149,7 +148,7 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void maybeSchedule(Runnable runnable, boolean globalContext) {
-        // In Folia we don't usually have to schedule this as there is no concept of a single main thread.
+        // In Folia, we don't usually have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
         // However, in some cases we may want to access the global region for a global context.
         if (ClassNames.IS_FOLIA) {
@@ -200,8 +199,7 @@ public final class SpigotVersionSpecificMethods {
 
         if (NEW_VISIBILITY) {
             source.showPlayer(plugin, target);
-        } else {
-            source.showPlayer(target);
         }
+        source.showPlayer(target);
     }
 }
