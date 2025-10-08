@@ -40,6 +40,7 @@ import org.bukkit.plugin.Plugin;
 import org.geysermc.floodgate.SpigotPlugin;
 import org.geysermc.floodgate.api.event.skin.SkinApplyEvent;
 import org.geysermc.floodgate.skin.SkinDataImpl;
+import org.jetbrains.annotations.NotNull;
 
 public final class SpigotVersionSpecificMethods {
     private static final Method GET_SPIGOT;
@@ -119,14 +120,11 @@ public final class SpigotVersionSpecificMethods {
         return ReflectionUtils.castedInvoke(spigot, OLD_GET_LOCALE);
     }
 
-    public void hideAndShowPlayer(Player on, Player target) {
-        // In Folia we don't have to schedule this as there is no concept of a single main thread.
-        // Instead, we have to schedule the task per player.
-        if (ClassNames.IS_FOLIA) {
-            on.getScheduler().execute(plugin, () -> hideAndShowPlayer0(on, target), null, 0);
-            return;
-        }
-        hideAndShowPlayer0(on, target);
+    public void hideAndShowPlayer(@NotNull Player on, @NotNull Player target) {
+        on.getScheduler().run(plugin, task -> {
+            hideAndShowPlayerHide(on, target);
+            on.getScheduler().runDelayed(plugin, task2 -> hideAndShowPlayerShow(on, target), null, 1L);
+        }, null);
     }
 
     public SkinApplyEvent.SkinData currentSkin(GameProfile profile) {
@@ -157,42 +155,32 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void schedule(Runnable runnable, long delay) {
-        if (ClassNames.IS_FOLIA) {
-            plugin.getServer().getAsyncScheduler().runDelayed(
-                    plugin, $ -> runnable.run(), delay * 50, TimeUnit.MILLISECONDS
-            );
-            return;
-        }
-        plugin.getServer().getScheduler().runTaskLater(plugin, runnable, delay);
+        plugin.getServer().getAsyncScheduler().runDelayed(
+                plugin, $ -> runnable.run(), delay * 50, TimeUnit.MILLISECONDS
+        );
     }
 
     @SuppressWarnings("deprecation")
-    private void hideAndShowPlayer0(Player source, Player target) {
+    private void hideAndShowPlayerHide(@NotNull Player source, @NotNull Player target) {
         if (NEW_VISIBILITY) {
             source.hidePlayer(plugin, target);
+            return;
+        }
+
+        source.hidePlayer(target);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void hideAndShowPlayerShow(@NotNull Player source, @NotNull Player target) {
+        if (NEW_VISIBILITY) {
             source.showPlayer(plugin, target);
             return;
         }
-        source.hidePlayer(target);
+
         source.showPlayer(target);
     }
 
     public void maybeSchedule(Runnable runnable) {
-        this.maybeSchedule(runnable, false);
-    }
-
-    public void maybeSchedule(Runnable runnable, boolean globalContext) {
-        // In Folia we don't usually have to schedule this as there is no concept of a single main thread.
-        // Instead, we have to schedule the task per player.
-        // However, in some cases we may want to access the global region for a global context.
-        if (ClassNames.IS_FOLIA) {
-            if (globalContext) {
-                plugin.getServer().getGlobalRegionScheduler().run(plugin, (task) -> runnable.run());
-            } else {
-                runnable.run();
-            }
-            return;
-        }
-        plugin.getServer().getScheduler().runTask(plugin, runnable);
+        plugin.getServer().getGlobalRegionScheduler().run(plugin, (task) -> runnable.run());
     }
 }

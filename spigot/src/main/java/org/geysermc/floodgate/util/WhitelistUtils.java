@@ -29,7 +29,6 @@ import com.mojang.authlib.GameProfile;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
 
 @SuppressWarnings("ConstantConditions")
 public final class WhitelistUtils {
@@ -74,7 +73,7 @@ public final class WhitelistUtils {
     }
 
     static void setWhitelist(OfflinePlayer player, boolean whitelist, SpigotVersionSpecificMethods versionSpecificMethods) {
-        versionSpecificMethods.maybeSchedule(() -> player.setWhitelisted(whitelist), true); // Whitelisting is on the global thread
+        versionSpecificMethods.maybeSchedule(() -> player.setWhitelisted(whitelist)); // Whitelisting is on the global thread
     }
 
     static OfflinePlayer getOfflinePlayer(GameProfile profile) {
