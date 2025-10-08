@@ -121,10 +121,8 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void hideAndShowPlayer(@NotNull Player on, @NotNull Player target) {
-        on.getScheduler().run(plugin, task -> {
-            hideAndShowPlayerHide(on, target);
-            on.getScheduler().runDelayed(plugin, task2 -> hideAndShowPlayerShow(on, target), null, 1L);
-        }, null);
+        on.getScheduler().runDelayed(plugin, task -> hideAndShowPlayerHide(on, target), null, 1L);
+        on.getScheduler().runDelayed(plugin, task -> hideAndShowPlayerShow(on, target), null, 1L);
     }
 
     public SkinApplyEvent.SkinData currentSkin(GameProfile profile) {
@@ -181,6 +179,6 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void maybeSchedule(Runnable runnable) {
-        plugin.getServer().getGlobalRegionScheduler().run(plugin, (task) -> runnable.run());
+        plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> runnable.run());
     }
 }
