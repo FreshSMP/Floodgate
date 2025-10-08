@@ -121,7 +121,7 @@ public final class SpigotVersionSpecificMethods {
     }
 
     public void hideAndShowPlayer(@NotNull Player on, @NotNull Player target) {
-        on.getScheduler().runDelayed(plugin, task -> hideAndShowPlayerHide(on, target), null, 1L);
+        on.getScheduler().run(plugin, task -> hideAndShowPlayerHide(on, target), null);
         on.getScheduler().runDelayed(plugin, task -> hideAndShowPlayerShow(on, target), null, 1L);
     }
 
