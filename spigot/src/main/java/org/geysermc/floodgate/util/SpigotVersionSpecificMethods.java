@@ -122,7 +122,7 @@ public final class SpigotVersionSpecificMethods {
 
     public void hideAndShowPlayer(@NotNull Player on, @NotNull Player target) {
         on.getScheduler().run(plugin, task -> hideAndShowPlayerHide(on, target), null);
-        on.getScheduler().runDelayed(plugin, task -> hideAndShowPlayerShow(on, target), null, 1L);
+        on.getScheduler().run(plugin, task -> hideAndShowPlayerShow(on, target), null);
     }
 
     public SkinApplyEvent.SkinData currentSkin(GameProfile profile) {
