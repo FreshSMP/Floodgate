@@ -40,7 +40,6 @@ import org.bukkit.plugin.Plugin;
 import org.geysermc.floodgate.SpigotPlugin;
 import org.geysermc.floodgate.api.event.skin.SkinApplyEvent;
 import org.geysermc.floodgate.skin.SkinDataImpl;
-import org.jetbrains.annotations.NotNull;
 
 public final class SpigotVersionSpecificMethods {
     private static final Method GET_SPIGOT;
@@ -120,10 +119,11 @@ public final class SpigotVersionSpecificMethods {
         return ReflectionUtils.castedInvoke(spigot, OLD_GET_LOCALE);
     }
 
-    public void hideAndShowPlayer(@NotNull Player on, @NotNull Player target) {
+    public void hideAndShowPlayer(Player on, Player target) {
         // In Folia, we don't have to schedule this as there is no concept of a single main thread.
         // Instead, we have to schedule the task per player.
-        // We use separate schedulers for hide and show to avoid race conditions that can crash the server.
+        // We use separate schedulers for hide and show to avoid race conditions that can crash the
+        // server on Folia only.
         if (ClassNames.IS_FOLIA) {
             on.getScheduler().run(plugin, task -> hideAndShowPlayerHide(on, target), null);
             on.getScheduler().run(plugin, task -> hideAndShowPlayerShow(on, target), null);
@@ -171,22 +171,20 @@ public final class SpigotVersionSpecificMethods {
     }
 
     @SuppressWarnings("deprecation")
-    private void hideAndShowPlayerHide(@NotNull Player source, @NotNull Player target) {
+    private void hideAndShowPlayerHide(Player source, Player target) {
         if (NEW_VISIBILITY) {
             source.hidePlayer(plugin, target);
             return;
         }
-
         source.hidePlayer(target);
     }
 
     @SuppressWarnings("deprecation")
-    private void hideAndShowPlayerShow(@NotNull Player source, @NotNull Player target) {
+    private void hideAndShowPlayerShow(Player source, Player target) {
         if (NEW_VISIBILITY) {
             source.showPlayer(plugin, target);
             return;
         }
-
         source.showPlayer(target);
     }
 
